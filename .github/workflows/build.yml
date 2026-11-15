@@ -1,0 +1,47 @@
+name: Build DrawDial
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        scheme: [rootful, rootless, roothide]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cai cong cu
+        run: brew install ldid dpkg make
+
+      - name: Cai Theos
+        run: |
+          if [ "${{ matrix.scheme }}" = "roothide" ]; then
+            REPO=https://github.com/roothide/theos
+          else
+            REPO=https://github.com/theos/theos
+          fi
+          git clone --recursive --depth=1 "$REPO" "$HOME/theos"
+          echo "THEOS=$HOME/theos" >> $GITHUB_ENV
+
+      - name: Tai SDK iOS 16.5
+        run: |
+          git clone --depth=1 https://github.com/theos/sdks /tmp/sdks
+          mkdir -p "$HOME/theos/sdks"
+          cp -R /tmp/sdks/iPhoneOS16.5.sdk "$HOME/theos/sdks/"
+
+      - name: Build
+        run: |
+          export PATH="$(brew --prefix make)/libexec/gnubin:$PATH"
+          if [ "${{ matrix.scheme }}" = "rootful" ]; then
+            make package FINALPACKAGE=1
+          else
+            make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=${{ matrix.scheme }}
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: debs-${{ matrix.scheme }}
+          path: packages/*.deb
