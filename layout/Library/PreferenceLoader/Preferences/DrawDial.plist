@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>entry</key>
+	<dict>
+		<key>cell</key>
+		<string>PSLinkCell</string>
+		<key>label</key>
+		<string>DrawDial</string>
+	</dict>
+	<key>title</key>
+	<string>DrawDial</string>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key><string>PSGroupCell</string>
+			<key>label</key><string>Chung</string>
+			<key>footerText</key><string>Sau khi đổi cài đặt, hãy thoát hẳn app Điện thoại rồi mở lại.</string>
+		</dict>
+		<dict>
+			<key>cell</key><string>PSSwitchCell</string>
+			<key>label</key><string>Bật tweak</string>
+			<key>key</key><string>enabled</string>
+			<key>default</key><true/>
+			<key>defaults</key><string>com.local.drawdial</string>
+		</dict>
+		<dict>
+			<key>cell</key><string>PSSwitchCell</string>
+			<key>label</key><string>Mặc định chế độ Chữ</string>
+			<key>key</key><string>defaultLetters</string>
+			<key>default</key><false/>
+			<key>defaults</key><string>com.local.drawdial</string>
+		</dict>
+		<dict>
+			<key>cell</key><string>PSGroupCell</string>
+			<key>label</key><string>Thời gian chờ nhận dạng (giây)</string>
+		</dict>
+		<dict>
+			<key>cell</key><string>PSSliderCell</string>
+			<key>key</key><string>delay</string>
+			<key>default</key><real>0.7</real>
+			<key>min</key><real>0.3</real>
+			<key>max</key><real>1.5</real>
+			<key>showValue</key><true/>
+			<key>defaults</key><string>com.local.drawdial</string>
+		</dict>
+		<dict>
+			<key>cell</key><string>PSGroupCell</string>
+			<key>label</key><string>Gỡ lỗi</string>
+			<key>footerText</key><string>Nhấn giữ nút bút chì trên màn hình Bàn phím để xem log ngay trong app.</string>
+		</dict>
+		<dict>
+			<key>cell</key><string>PSSwitchCell</string>
+			<key>label</key><string>Ghi log ra file</string>
+			<key>key</key><string>log</string>
+			<key>default</key><false/>
+			<key>defaults</key><string>com.local.drawdial</string>
+		</dict>
+	</array>
+</dict>
+</plist>
