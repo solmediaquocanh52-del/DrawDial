@@ -41,6 +41,13 @@
 		</dict>
 		<dict>
 			<key>cell</key><string>PSSwitchCell</string>
+			<key>label</key><string>Dùng mẫu chữ viết tay đã dạy</string>
+			<key>key</key><string>useTemplates</string>
+			<key>default</key><true/>
+			<key>defaults</key><string>com.local.drawdial</string>
+		</dict>
+		<dict>
+			<key>cell</key><string>PSSwitchCell</string>
 			<key>label</key><string>Mặc định chế độ Chữ</string>
 			<key>key</key><string>defaultLetters</string>
 			<key>default</key><false/>
