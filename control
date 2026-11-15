@@ -1,7 +1,7 @@
 Package: com.local.drawdial
 Name: DrawDial
 Depends: mobilesubstrate, preferenceloader
-Version: 0.1.0
+Version: 0.2.0
 Architecture: iphoneos-arm
 Description: Ve so hoac chu tren ban phim app Dien thoai de tim nhanh Gan day va Danh ba
 Maintainer: you
