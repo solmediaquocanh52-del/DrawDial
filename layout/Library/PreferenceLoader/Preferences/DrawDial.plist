@@ -27,6 +27,20 @@
 		</dict>
 		<dict>
 			<key>cell</key><string>PSSwitchCell</string>
+			<key>label</key><string>Nút bút chì trên Bàn phím</string>
+			<key>key</key><string>showPencil</string>
+			<key>default</key><true/>
+			<key>defaults</key><string>com.local.drawdial</string>
+		</dict>
+		<dict>
+			<key>cell</key><string>PSSwitchCell</string>
+			<key>label</key><string>Hiện tab Vẽ riêng (cạnh Bàn phím)</string>
+			<key>key</key><string>showTab</string>
+			<key>default</key><false/>
+			<key>defaults</key><string>com.local.drawdial</string>
+		</dict>
+		<dict>
+			<key>cell</key><string>PSSwitchCell</string>
 			<key>label</key><string>Mặc định chế độ Chữ</string>
 			<key>key</key><string>defaultLetters</string>
 			<key>default</key><false/>
