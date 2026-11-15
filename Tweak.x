@@ -7,9 +7,6 @@
 #import <objc/runtime.h>
 #import <sqlite3.h>
 
-@interface PHKeypadViewController : UIViewController
-@end
-
 static NSString *const kDomain = @"com.local.drawdial";
 static NSMutableString *gLog;
 
@@ -553,6 +550,93 @@ static void DDRecognize(UIImage *img, BOOL digits, void (^done)(NSArray<NSString
 }
 @end
 
+#pragma mark - Tab rieng
+
+@interface DDDrawViewController : UIViewController
+@property (nonatomic, strong) DDPanel *panel;
+@end
+
+@implementation DDDrawViewController
+
+- (instancetype)init {
+    if ((self = [super initWithNibName:nil bundle:nil])) {
+        self.title = @"Vẽ";
+        self.tabBarItem = [[UITabBarItem alloc] initWithTitle:@"Vẽ"
+                                                        image:[UIImage systemImageNamed:@"pencil.tip.crop.circle"]
+                                                          tag:99];
+    }
+    return self;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.view.backgroundColor = UIColor.systemBackgroundColor;
+    self.panel = [[DDPanel alloc] initWithFrame:self.view.bounds];
+    [self.view addSubview:self.panel];
+}
+
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    self.panel.frame = UIEdgeInsetsInsetRect(self.view.bounds, self.view.safeAreaInsets);
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [self.panel prepare];
+}
+
+@end
+
+static DDDrawViewController *sDrawVC;
+
+static BOOL DDIsKeypadVC(UIViewController *vc) {
+    NSMutableArray *chain = [NSMutableArray arrayWithObject:vc];
+    if ([vc isKindOfClass:[UINavigationController class]]) {
+        UINavigationController *n = (UINavigationController *)vc;
+        if (n.viewControllers.firstObject) [chain addObject:n.viewControllers.firstObject];
+        if (n.topViewController) [chain addObject:n.topViewController];
+    }
+    [chain addObjectsFromArray:vc.childViewControllers];
+    for (UIViewController *c in chain) {
+        NSString *cn = NSStringFromClass([c class]);
+        if ([cn containsString:@"Keypad"] || [cn containsString:@"Dialer"]) return YES;
+    }
+    NSString *t = vc.tabBarItem.title ?: @"";
+    return [t isEqualToString:@"Bàn phím"] || [t isEqualToString:@"Keypad"];
+}
+
+static NSArray *DDAugment(UITabBarController *tbc, NSArray *vcs) {
+    if (!vcs.count) return vcs;
+    if (![NSBundle.mainBundle.bundleIdentifier isEqualToString:@"com.apple.mobilephone"]) return vcs;
+    if (!DDBool(@"enabled", YES) || !DDBool(@"showTab", NO)) return vcs;
+    for (UIViewController *v in vcs)
+        if ([v isKindOfClass:[DDDrawViewController class]]) return vcs;
+
+    NSInteger idx = -1;
+    for (NSUInteger i = 0; i < vcs.count; i++) {
+        UIViewController *v = vcs[i];
+        DDLog(@"tab %lu: %@ title=%@", (unsigned long)i, NSStringFromClass([v class]), v.tabBarItem.title);
+        if (DDIsKeypadVC(v)) idx = (NSInteger)i;
+    }
+    if (!sDrawVC) sDrawVC = [DDDrawViewController new];
+    NSMutableArray *m = [vcs mutableCopy];
+    if (idx >= 0) [m insertObject:sDrawVC atIndex:idx + 1];
+    else [m addObject:sDrawVC];
+    DDLog(@"them tab Ve tai vi tri %ld (keypad idx=%ld)", (long)(idx >= 0 ? idx + 1 : (NSInteger)m.count - 1), (long)idx);
+    return m;
+}
+
+static void DDEnsureTab(UITabBarController *tbc) {
+    NSArray *v = tbc.viewControllers;
+    if (!v.count) return;
+    NSArray *n = DDAugment(tbc, v);
+    if (n.count != v.count) {
+        UIViewController *sel = tbc.selectedViewController;
+        [tbc setViewControllers:n animated:NO];
+        if (sel && [n containsObject:sel]) tbc.selectedViewController = sel;
+    }
+}
+
 #pragma mark - Install / Layout
 
 static const void *kPanelKey = &kPanelKey;
@@ -592,7 +676,7 @@ static void DDLayout(UIViewController *vc) {
 }
 
 static void DDInstall(UIViewController *vc) {
-    if (!DDBool(@"enabled", YES)) return;
+    if (!DDBool(@"enabled", YES) || !DDBool(@"showPencil", YES)) return;
     if (objc_getAssociatedObject(vc, kPanelKey)) return;
 
     DDLog(@"install on %@", NSStringFromClass([vc class]));
@@ -619,16 +703,42 @@ static void DDInstall(UIViewController *vc) {
     DDLayout(vc);
 }
 
-%hook PHKeypadViewController
+%hook UIViewController
 
 - (void)viewDidAppear:(BOOL)animated {
     %orig;
+    if (![NSBundle.mainBundle.bundleIdentifier isEqualToString:@"com.apple.mobilephone"]) return;
+    if ([self isKindOfClass:[DDDrawViewController class]]) return;
+    if (objc_getAssociatedObject(self, kPanelKey)) return;
+    if (!DDBool(@"enabled", YES) || !DDBool(@"showPencil", YES)) return;
+    UIView *pad = DDFindView(self.view, @"NumberPad") ?: DDFindView(self.view, @"Keypad") ?: DDFindView(self.view, @"Dialer");
+    if (!pad) return;
+    UIResponder *r = pad;
+    while (r && ![r isKindOfClass:[UIViewController class]]) r = r.nextResponder;
+    if (r != self) return;
     DDInstall(self);
 }
 
 - (void)viewDidLayoutSubviews {
     %orig;
     DDLayout(self);
+}
+
+%end
+
+%hook UITabBarController
+
+- (void)setViewControllers:(NSArray *)vcs animated:(BOOL)animated {
+    %orig(DDAugment(self, vcs), animated);
+}
+
+- (void)setViewControllers:(NSArray *)vcs {
+    %orig(DDAugment(self, vcs));
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+    %orig;
+    DDEnsureTab(self);
 }
 
 %end
@@ -646,5 +756,4 @@ static void DDInstall(UIViewController *vc) {
         }
     }
     free(list);
-    DDLog(@"PHKeypadViewController exists: %@", NSClassFromString(@"PHKeypadViewController") ? @"yes" : @"no");
-}
+    }
